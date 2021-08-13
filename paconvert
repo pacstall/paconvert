@@ -1,0 +1,84 @@
+#!/bin/bash
+if [[ -z "$1" ]]; then
+	echo "Please specify a package"
+	exit 1
+fi
+
+while [[ -n "$1" ]]; do
+
+	if [[ $(wget -S --spider "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$1"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
+		tfile="$(curl "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$1")"
+	else
+		echo "$1 does not exist in the AUR"
+		exit 1
+	fi
+	
+	if [[ $(wget -S --spider "https://aur.archlinux.org/cgit/aur.git/plain/$1.install?h=$1"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
+		tfile+="\n$(curl "https://aur.archlinux.org/cgit/aur.git/plain/$1.install?h=$1")"
+	else
+		echo ".install file not found in aur, continuing without"
+	fi
+	
+	echo "--convert will only substitute the names of variables and functions, not the dependencies which needs to be replaced with its corrosponding Ubuntu packages."
+	echo "All architectures other than x86_64/amd64 are unsupported in pacstall"
+	echo "Variables such as pkgbase, pkgrel, epoch, arch, license, groups, checkdepends, backup, changelog, url, noextract, validpgpkeys, source_i686, md5sums, sha1sums sha224sums, sha384sums, sha512sums and b2sums are not currently implemented in Pacstall, they should be removed."
+	echo "An equivilent to check() is not currently implemented in Pacstall. Its contents should be removed"
+	echo "Equivilents to .install file functions such as pre_install(), pre_upgrade(), post_upgrade(), and pre_remove() are not currently implemented in pacstall. Its contents should be removed"
+	echo "Lists such as source and sha256sum are implemented as single strings (url, patch, hash) in pacstall. Please change them to single strings"
+	
+	tfile=${tfile//'pkgname='/'name='} # names substitution
+	tfile=${tfile//'${pkgname}'/'$name'}
+	tfile=${tfile//'pkgver='/'version='}
+	tfile=${tfile//'${pkgver}'/'$version'}
+	tfile=${tfile//'pkgdesc='/'description='}
+	tfile=${tfile//'url='/'link='}
+	tfile=${tfile//'source='/'url='}
+	tfile=${tfile//'source_x86_64='/'url='}
+	tfile=${tfile//'makedepends='/'build_depends='}
+	tfile=${tfile//'provides='/'gives='}
+	tfile=${tfile//'sha256sums='/'hash='}
+	tfile=${tfile//'package() {'/'install() {'}
+	tfile=${tfile//'$pkgdir'/'$STOWDIR/$name'}
+	tfile=${tfile//'# Maintainer: '/'maintainer="'}
+	tfile=${tfile//'post_install() {'/'postinst() {'}
+	printf "$tfile" | grep -q 'post_remove() {'
+	if [[ $? -eq 0 ]]; then
+		rmscript=true
+		tfile=${tfile//'post_remove() {'/'removescript() {'}
+	fi
+	
+	printf "$tfile" | grep -q 'prepare() {'
+	if [[ $? -eq 0 ]]; then
+		line=$(printf "$tfile" | grep -n 'prepare()')
+	else
+		printf "$tfile" | grep -q 'build()'
+		if [[ $? -eq 0 ]]; then
+			line=$(printf "$tfile" | grep -n 'build()')
+		else
+			line=$(printf "$tfile" | grep -n 'install()')
+		fi
+	fi
+	linenum=$(($(echo $line | cut -d: -f1)-1))
+	variables=$(printf "$tfile" | head -$linenum)
+	
+	revlinenum=$(($(printf "$tfile" | wc -l)-$linenum+1))
+	funcs=$(printf "$tfile" | tail -$revlinenum)
+
+	variables=${variables//"' '"/" "}
+	variables=${variables//"\" \""/" "}
+	variables=${variables//"(\""/"\""}
+	variables=${variables//"('"/"\""}
+	variables=${variables//"\")"/"\""}
+	variables=${variables//"')"/"\""}
+	variables=${variables//">"/">\""}
+	if [[ -n $rmscript ]]; then
+		variable+="\nremovescript=\"yes\""
+	fi
+	if [[ -w $(pwd) ]]; then
+		printf "$variables\n$funcs" | tee "$1.pacscript" > "/dev/null"
+	else
+		printf "$variables\n$funcs" | sudo tee "$1.pacscript" > "/dev/null"
+	fi
+	shift
+done
+exit 0
