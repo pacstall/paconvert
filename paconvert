@@ -1,25 +1,70 @@
 #!/bin/bash
-if [[ -z "$1" ]]; then
-	echo "Please specify a package"
+if [[ -z "$2" ]]; then
+	echo "Please specify a flag/package"
 	exit 1
 fi
 
-while [[ -n "$1" ]]; do
-
-	if [[ $(wget -S --spider "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$1"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
-		tfile="$(curl "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$1")"
-	else
-		echo "$1 does not exist in the AUR"
-		exit 1
-	fi
+while [[ -n "$2" ]]; do
+	case "$1" in
+		-a|--aur)
+			if [[ $(wget -S --spider "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$2"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
+				tfile="$(curl "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$2")"
+			else
+				echo "$2 does not exist in the AUR"
+				exit 1
+			fi
 	
-	if [[ $(wget -S --spider "https://aur.archlinux.org/cgit/aur.git/plain/$1.install?h=$1"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
-		tfile+="\n$(curl "https://aur.archlinux.org/cgit/aur.git/plain/$1.install?h=$1")"
-	else
-		echo ".install file not found in aur, continuing without"
-	fi
+			if [[ $(wget -S --spider "https://aur.archlinux.org/cgit/aur.git/plain/$2.install?h=$2"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
+				tfile+="\n$(curl "https://aur.archlinux.org/cgit/aur.git/plain/$2.install?h=$2")"
+			else
+				echo ".install file not found in the AUR, continuing without"
+			fi
+		;;
+		-m|--mpr)
+			if [[ $(wget -S --spider "https://mpr.hunterwittenborn.com/cgit/aur.git/plain/PKGBUILD?h=$2"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
+				tfile="$(curl "https://mpr.hunterwittenborn.com/cgit/aur.git/plain/PKGBUILD?h=$2")"
+			else
+				echo "$2 does not exist in the MPR"
+				exit 1
+			fi
 	
-	echo "--convert will only substitute the names of variables and functions, not the dependencies which needs to be replaced with its corrosponding Ubuntu packages."
+			if [[ $(wget -S --spider "https://mpr.hunterwittenborn.com/cgit/aur.git/plain/$2.install?h=$2"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
+				tfile+="\n$(curl "https://mpr.hunterwittenborn.com/cgit/aur.git/plain/$2.install?h=$2")"
+			else
+				echo ".install file not found in the MPR, continuing without"
+			fi
+		;;
+		-l|--local)
+			if [[ -f "$2.PKGBUILD" ]]; then
+				tfile=$(cat $2.PKGBUILD)
+			else
+				echo "$2.PKGBUILD does not exist"
+				exit 1
+			fi
+			
+			if [[ -f "$2.install" ]]; then
+				tfile+="\n$(cat $2.install)"
+			else
+				echo ".install file not found in the, continuing without"
+			fi
+		;;
+		-h|--help)
+			echo "
+			options:
+			-a --aur, Grab PKGBUILD from the AUR
+			-m --mpr, Grab PKGBUILD from the MPR
+			-l --local, Convert local PKGBUILD
+			-h --help, Display this message
+			"
+		;;
+		*)
+			paconvert -h
+			exit 3
+		;;
+		
+	esac
+	
+	echo "paconvert will only substitute the names of variables and functions, not the dependencies which needs to be replaced with its corrosponding Ubuntu packages."
 	echo "All architectures other than x86_64/amd64 are unsupported in pacstall"
 	echo "Variables such as pkgbase, pkgrel, epoch, arch, license, groups, checkdepends, backup, changelog, url, noextract, validpgpkeys, source_i686, md5sums, sha1sums sha224sums, sha384sums, sha512sums and b2sums are not currently implemented in Pacstall, they should be removed."
 	echo "An equivilent to check() is not currently implemented in Pacstall. Its contents should be removed"
@@ -75,9 +120,9 @@ while [[ -n "$1" ]]; do
 		variable+="\nremovescript=\"yes\""
 	fi
 	if [[ -w $(pwd) ]]; then
-		printf "$variables\n$funcs" | tee "$1.pacscript" > "/dev/null"
+		printf "$variables\n$funcs" | tee "$2.pacscript" > "/dev/null"
 	else
-		printf "$variables\n$funcs" | sudo tee "$1.pacscript" > "/dev/null"
+		printf "$variables\n$funcs" | sudo tee "$2.pacscript" > "/dev/null"
 	fi
 	shift
 done
