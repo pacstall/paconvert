@@ -64,12 +64,12 @@ while [[ -n "$2" ]]; do
 		
 	esac
 	
-	echo "paconvert will only substitute the names of variables and functions, not the dependencies which needs to be replaced with its corrosponding Ubuntu packages."
-	echo "All architectures other than x86_64/amd64 are unsupported in pacstall"
-	echo "Variables such as pkgbase, pkgrel, epoch, arch, license, groups, checkdepends, backup, changelog, url, noextract, validpgpkeys, source_i686, md5sums, sha1sums sha224sums, sha384sums, sha512sums and b2sums are not currently implemented in Pacstall, they should be removed."
-	echo "An equivilent to check() is not currently implemented in Pacstall. Its contents should be removed"
-	echo "Equivilents to .install file functions such as pre_install(), pre_upgrade(), post_upgrade(), and pre_remove() are not currently implemented in pacstall. Its contents should be removed"
-	echo "Lists such as source and sha256sum are implemented as single strings (url, patch, hash) in pacstall. Please change them to single strings"
+	printf "paconvert will only substitute the names of variables and functions, not the dependencies which needs to be replaced with its corrosponding Ubuntu packages.\n"
+	printf "All architectures other than x86_64/amd64 are unsupported in pacstall.\n"
+	printf "Variables such as pkgbase, pkgrel, epoch, arch, license, groups, checkdepends, backup, changelog, url, noextract, validpgpkeys, source_i686, md5sums, sha1sums sha224sums, sha384sums, sha512sums and b2sums are not currently implemented in Pacstall, they should be removed.\n"
+	printf "An equivilent to check() is not currently implemented in Pacstall. Its contents should be removed.\n"
+	printf "Equivilents to .install file functions such as pre_install(), pre_upgrade(), post_upgrade(), and pre_remove() are not currently implemented in pacstall. Its contents should be removed.\n"
+	printf "Lists such as source and sha256sum are implemented as single strings (url, patch, hash) in pacstall. Please change them to single strings.\n"
 	
 	tfile=${tfile//'pkgname='/'name='} # names substitution
 	tfile=${tfile//'${pkgname}'/'$name'}
