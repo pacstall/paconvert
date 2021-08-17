@@ -4,7 +4,12 @@ Makes converting PKGBUILDS into pacscripts easier
 Syntax:
 `paconvert <flag> <package name> ...`
 
-options:
+##### Installation
+```bash
+wget -O /bin/paconvert https://raw.githubusercontent.com/pacstall/paconvert/main/paconvert
+```
+
+Options:
 - -a --aur, Grab PKGBUILD from the AUR
 - -m --mpr, Grab PKGBUILD from the MPR
 - -l --local, Convert local PKGBUILD
