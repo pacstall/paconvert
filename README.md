@@ -6,7 +6,7 @@ Syntax:
 
 ##### Installation
 ```bash
-wget -O /bin/paconvert https://raw.githubusercontent.com/pacstall/paconvert/main/paconvert
+wget -q -O /bin/paconvert https://raw.githubusercontent.com/pacstall/paconvert/main/paconvert && sudo chmod +x /bin/paconvert
 ```
 
 Options:
