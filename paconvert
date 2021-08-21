@@ -8,28 +8,28 @@ while [[ -n "$2" ]]; do
 	case "$1" in
 		-a|--aur)
 			if [[ $(wget -S --spider "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$2"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
-				tfile="$(curl "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$2")"
+				tfile="$(curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$2")"
 			else
 				echo "$2 does not exist in the AUR"
 				exit 1
 			fi
 
 			if [[ $(wget -S --spider "https://aur.archlinux.org/cgit/aur.git/plain/$2.install?h=$2"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
-				tfile+="\n$(curl "https://aur.archlinux.org/cgit/aur.git/plain/$2.install?h=$2")"
+				tfile+="\n$(curl -s "https://aur.archlinux.org/cgit/aur.git/plain/$2.install?h=$2")"
 			else
 				echo ".install file not found in the AUR, continuing without"
 			fi
 		;;
 		-m|--mpr)
 			if [[ $(wget -S --spider "https://mpr.hunterwittenborn.com/cgit/aur.git/plain/PKGBUILD?h=$2"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
-				tfile="$(curl "https://mpr.hunterwittenborn.com/cgit/aur.git/plain/PKGBUILD?h=$2")"
+				tfile="$(curl -s "https://mpr.hunterwittenborn.com/cgit/aur.git/plain/PKGBUILD?h=$2")"
 			else
 				echo "$2 does not exist in the MPR"
 				exit 1
 			fi
 
 			if [[ $(wget -S --spider "https://mpr.hunterwittenborn.com/cgit/aur.git/plain/$2.install?h=$2"  2>&1 | grep 'HTTP/1.1 200 OK') ]]; then
-				tfile+="\n$(curl "https://mpr.hunterwittenborn.com/cgit/aur.git/plain/$2.install?h=$2")"
+				tfile+="\n$(curl -s "https://mpr.hunterwittenborn.com/cgit/aur.git/plain/$2.install?h=$2")"
 			else
 				echo ".install file not found in the MPR, continuing without"
 			fi
