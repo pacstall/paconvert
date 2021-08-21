@@ -35,7 +35,7 @@ while [[ -n "$2" ]]; do
 			fi
 		;;
 		-l|--local)
-			if [[ -f "$2.PKGBUILD" ]]; thenEquivi
+			if [[ -f "$2.PKGBUILD" ]]; then
 				tfile=$(cat $2.PKGBUILD)
 			else
 				echo "$2.PKGBUILD does not exist"
